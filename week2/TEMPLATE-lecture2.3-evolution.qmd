@@ -94,6 +94,8 @@ lyme_pop <- left_join(lyme_clean, us_state_pop) |>
 #| eval: true
 #| echo: true
 # line chart ----
+ggplot(lyme_pop, aes(x = year, y = cases_per100k, group = state)) +
+  geom_line()
 ```
 
 ### Alt 1: Avoid spaghetti plots 
@@ -106,11 +108,13 @@ lyme_pop <- left_join(lyme_clean, us_state_pop) |>
 
 # highlight one group ----
 ggplot(lyme_pop, aes(x = year, y = cases_per100k, group = state)) +
-  geom_line() 
+  geom_line() +
+  gghighlight(state == "New Jersey")
 
 # highlight based on criteria ----
-ggplot(lyme_pop, aes(x = year, y = cases_per100k, group = state)) +
-  geom_line() 
+ggplot(lyme_pop, aes(x = year, y = cases_per100k, group = state, color = state)) +
+  geom_line() +
+  gghighlight(max(cases_per100k) > 100)
 ```
 
 ### Note 1: It's okay to cut the y-axis
@@ -177,7 +181,8 @@ lyme_pop |>
 lyme_pop |> 
   filter(state == "Vermont") |> 
   ggplot(aes(x = year, y = cases_per100k, group = state)) +
-  geom_line() 
+  geom_line() +
+  coord_fixed(ratio = 1/50)
 ```
 
 ## Area charts
@@ -189,7 +194,11 @@ lyme_pop |>
 #| echo: true
 # area chart of lyme disease incidence in NJ ----
 lyme_pop |> 
-  filter(state == "New Jersey")
+  filter(state == "New Jersey") %>% 
+  ggplot(aes(x = year, y = cases_per100k, group = state, fill = state)) +
+  geom_area() +
+  scale_x_discrete(expand = c(0, NA)) +
+  scale_y_continuous(expand = c(0, NA))
 ```
 
 ## Stacked area charts 
@@ -201,7 +210,9 @@ lyme_pop |>
 #| echo: true
 # stacked area chart ----
 lyme_pop |> 
-  filter(state %in% c("Maine", "Rhode Island", "New Hampshire", "Vermont")) 
+  filter(state %in% c("Maine", "Rhode Island", "New Hampshire", "Vermont")) %>% 
+  ggplot(aes(x = year, y = cases_per100k, group = state, fill = state)) +
+  geom_area()
 ```
 
 ### Alt 1: proportional stacked area chart
@@ -215,7 +226,7 @@ lyme_pop |>
 lyme_pop |> 
   filter(state %in% c("Maine", "Rhode Island", "New Hampshire", "Vermont")) |> 
   ggplot(aes(x = year, y = cases_per100k, group = state, fill = state)) +
-  geom_area() 
+  geom_area(position = "fill")
 ```
 
 ### Note 1: stacked area charts aren't great for looking at evolution of individual groups

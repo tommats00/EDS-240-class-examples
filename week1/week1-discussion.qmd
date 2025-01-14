@@ -3,25 +3,87 @@ title: "week1-discussion"
 author: "Tom Gibbens-Matsuyama"
 format: html
 editor: visual
+editor_options: 
+  chunk_output_type: console
 ---
-
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
+### Load libraries
 ```{r}
-1 + 1
+library(tidyverse)
+library(here)
+library(janitor)
+library(usdata)
 ```
 
-You can add options to executable code like this
-
+### Load dadta
 ```{r}
-#| echo: false
-2 * 2
+fracking <- read_csv(here("week1", "data", "registryupload_1.csv"))
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+#### Data exploration
+
+```{r}
+dim(fracking)
+str(fracking)
+fracking
+```
+
+### Clean Fracking Data
+
+```{r}
+fracking_clean <-
+  fracking %>% 
+  clean_names() %>% 
+  mutate(job_start_date = str_remove(job_start_date, " AM")) %>% 
+  
+  mutate(datetime_start = mdy_hms(job_start_date)) %>% 
+  
+  mutate(year = year(datetime_start)) %>% 
+  
+  select(datetime_start, year, state_name, well_name,, total_base_water_volume) %>% 
+  
+  mutate(state_name = str_to_title(state_name)) %>% 
+  
+  filter(!str_detect(string = state_name, pattern = "\\?")) %>%  # B/C ? is an operator in R we have to use the two backslashes to soley recognize ? in the cells.
+  mutate(state_name = ifelse(test = str_length(state_name) == 2, # Using ifelse function
+                             yes = abbr2state(state_name),  # abbr2state comes from usdata library
+                             no = state_name)) %>% 
+  
+    mutate(state_name = case_when(
+    
+    # All states go here 
+    state_name == "Colordao" ~ "Colorado",
+    state_name == "Loiusiana" ~ "Louisiana",
+    state_name == "Louisianna" ~ "Louisiana",
+    state_name == "Lousiana" ~ "Louisiana",
+    state_name == "New Mexcio" ~ "New Mexico",
+    state_name == "Norh Dakota" ~ "North Dakota",
+    state_name == "Norht Dakota" ~ "North Dakota",
+    state_name == "North  Dakota" ~ "North Dakota",
+    state_name == "North Dakata" ~ "North Dakota",
+    state_name == "North Dakotta" ~ "North Dakota",
+    state_name == "Noth Dakota" ~ "North Dakota",
+    state_name == "Pennslvania" ~ "Pennsylvania",
+    state_name == "Pennsylavania" ~ "Pennsylvania",
+    state_name == "Pennsylvanya" ~ "Pennsylvania",
+    state_name == "Penssylvania" ~ "Pennsylvania",
+    state_name == "Texasa" ~ "Texas",
+    state_name == "Texs" ~ "Texas", 
+    state_name == "West Viginia" ~ "West Virginia",
+    state_name == "Wyominng" ~ "Wyoming", 
+    TRUE ~ state_name # copy over rest of state names from as-is
+  )) %>% 
+    
+    filter(!state_name %in% c("Beaver", "Beckham", "Harper", "Hemphill", "Red River", "Roosevelt", "Rusk", "State", "Ward")) %>%
+  mutate(state_abb = state2abbr(state_name)) %>% 
+  
+  relocate(state_abb, .after = state_name) %>% 
+  
+  rename(total_base_water_volume_gal = total_base_water_volume) %>% 
+  
+  drop_na(total_base_water_volume_gal) %>% 
+  
+  arrange(datetime_start)
+
+fracking_clean
+```
+
