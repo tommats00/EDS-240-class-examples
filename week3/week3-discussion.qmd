@@ -1,0 +1,36 @@
+---
+title: "week3-discussion"
+author: "Tom Gibbens-Matsuyama"
+format: html
+editor: visual
+---
+
+
+## Start of Discussion Coding Session
+
+```{r}
+#| fig-alt: "A stacked histogram of penguin body masses of three species (g) where Gentoo's have a significantly higher body mass than Adelie and Chinstrap"
+#| warning: False
+#| message: False
+#| echo: False
+
+library(ggplot2)
+library(palmerpenguins)
+
+ggplot(data = penguins, aes(x = body_mass_g, fill = species)) +
+  geom_histogram(alpha = 0.5, 
+                 position = "identity") +
+  scale_fill_manual(values = c("darkorange","purple","cyan4")) +
+  labs(x = "Body mass (g)",
+       y = "Frequency",
+       title = "Penguin body masses")
+```
+
+#### Example 2
+
+![](nyt-monthly-temp.png){fig-alt="A dot plot of monthly global temperatures compared to the 20th century average. From 1975 onward, the yearly temperature is hotter than average, wehreas propr to 1975 it is cooler than average"}
+
+#### Example 3
+
+<img src="global_temp_viz.png" alt="A heatmap of global species observations where species observations are disproportionately from high income countries, particularly North American and European countries. width">
+
