@@ -35,11 +35,15 @@ cat_color_plot <- ggplot(na.omit(penguins),
                              color = species, shape = species)) +
   geom_point(size = 4, alpha = 0.8)
 
+cat_color_plot
+
 # requires continuous color scale ----
-cont_color_plot <- ggplot(na.omit(penguins), 
-                          aes(x = bill_length_mm, y = bill_depth_mm, 
-                              color = body_mass_g)) +
+con_color_plot <- ggplot(na.omit(penguins), 
+                         aes(x = bill_length_mm, y = bill_depth_mm, 
+                             color = body_mass_g)) +
   geom_point(size = 4, alpha = 0.8) 
+
+con_color_plot
 ```
 
 ## Colors for inclusive & accessible design
@@ -54,10 +58,12 @@ cont_color_plot <- ggplot(na.omit(penguins),
 #| warning: false
 
 # discrete viridis scales ----
-cat_color_plot 
+cat_color_plot +
+  scale_color_viridis_d()
 
 # continuous color scales ----
-cont_color_plot
+con_color_plot +
+  scale_color_viridis_c(option = "magma", direction = -1)
 ```
 
 ### RColorBrewer scales
@@ -77,6 +83,8 @@ RColorBrewer::display.brewer.pal()
 RColorBrewer::brewer.pal()
 
 # or save hex codes as a vector ----
+my_brew_pal <- RColorBrewer::brewer.pal(n = 4, name = "Dark2")
+
 ```
 
 - Using RColorBrewer palettes
@@ -87,13 +95,16 @@ RColorBrewer::brewer.pal()
 #| warning: false
 
 # for qualitative palettes ----
-cat_color_plot 
+cat_color_plot + 
+  scale_color_brewer(palette = "Dark2")
 
 # for unclassed continuous color scales ----
-cont_color_plot
+con_color_plot +
+  scale_color_distiller(palette = 'BuPu')
 
 # for classed continuous color scales ----
-cont_color_plot
+con_color_plot +
+  scale_color_fermenter(palette = "YlGnBu")
 ```
 
 ### Accessibility tips
@@ -104,23 +115,59 @@ cont_color_plot
 #| eval: true
 #| echo: true
 #| warning: false
+
+
 ggplot(penguins, aes(x = bill_length_mm, y = bill_depth_mm, color = body_mass_g)) +
-  geom_point(size = 4, alpha = 0.8) +
+  geom_point(size = 4, alpha = 0.8,
+             shape = 21) +
   scale_color_distiller(palette = "BuPu")
+
+
+# If we update aes from color to fill, need to update respective scaling
+ggplot(penguins, aes(x = bill_length_mm, y = bill_depth_mm, fill = body_mass_g)) +
+  geom_point(size = 4, alpha = 0.8,
+             shape = 21) +
+  scale_fill_distiller(palette = "BuPu")
 ```
 
-- use redundant mapping (colors & shapes) whenever possible (recall our original plot, with an added viridis color palette)
+- use redundant mapping (colors & shapes) whenever possible 
 
 ```{r}
 #| eval: true
 #| echo: true
 #| warning: false
+
+
 ggplot(penguins, aes(x = bill_length_mm, y = bill_depth_mm, color = species)) +
   geom_point(size = 4, alpha = 0.8) + 
   scale_color_viridis_d(option = "turbo") 
+
+
+# 
+ggplot(penguins, aes(x = bill_length_mm, y = bill_depth_mm, color = species)) +
+  geom_point(size = 4, alpha = 0.8,
+             shape = 21) + 
+  scale_color_viridis_d(option = "turbo")
 ```
 
 ## Paletteer
+
+```{r}
+#| eval: true
+#| echo: true
+# import {paletteer} ----
+library(paletteer)
+```
+
+Explore available packages in the form of built-in data frames:
+
+```{r}
+#| eval: false
+#| echo: true
+# view names of supported pkgs/palettes ----
+View(palettes_d_names)
+View(palettes_c_names)
+```
 
 ### I. apply palette using `scale_*_paletteer_*()`
 
@@ -128,14 +175,25 @@ ggplot(penguins, aes(x = bill_length_mm, y = bill_depth_mm, color = species)) +
 #| eval: true
 #| echo: true
 #| warning: false
+
 # discrete data / palette ----
-cat_color_plot 
+# Can find these palettes from the packages above
+cat_color_plot +
+  scale_color_paletteer_d("calecopal::superbloom3")
+
+cat_color_plot +
+  scale_color_paletteer_d("fishualize::Oncorhynchus_mykiss")
+
+
 
 # continuous data / palette (unclassed) ----
-cont_color_plot 
+con_color_plot +
+  scale_color_paletteer_c("scico::batlow")
 
 # continuous data / palette (classed) ----
-cont_color_plot 
+# Same as above but they are now binned
+con_color_plot +
+  scale_color_paletteer_binned("scico::batlow")
 ```
 
 ### II. create vector of colors using `paletteer_*()`, then apply using the appropriate `ggplot::scale_*()` function
@@ -147,14 +205,21 @@ cont_color_plot
 #| echo: true
 #| warning: false
 #| message: false
+# view names of pkgs/palettes ----
+# View(palettes_d_names)
+
 # create palette ----
+# Choosing three colors from wesanderson package
+pal_d <- paletteer_d("wesanderson::GrandBudapest1", n = 3)
 
 # apply to scatter plot (use `color` variant) ----
-cat_color_plot 
+cat_color_plot +
+  scale_color_manual(values = pal_d)
 
 # apply to histogram (use `fill` variant) ----
 ggplot(penguins, aes(x = body_mass_g, fill = species)) +
-  geom_histogram() 
+  geom_histogram() +
+  scale_fill_manual(values = pal_d)
 ```
 
 - continuous data / palette example: 
@@ -164,13 +229,19 @@ ggplot(penguins, aes(x = body_mass_g, fill = species)) +
 #| echo: true
 #| warning: false
 #| message: false
+# view names of pkgs/palettes ----
+# View(palettes_c_names)
+
 # create palette ----
+pal_c <- paletteer_c("scico::grayC", n = 5, direction = 1)
 
 # apply to scatter plot as an unclassed palette (use `gradientn` variant) ---- 
-cont_color_plot
+con_color_plot +
+ scale_color_gradientn(colors = pal_c)
 
 # apply to scatter plot as a classed (binned) palette (use `stepsn` variant) ---- 
-cont_color_plot 
+con_color_plot +
+  scale_color_stepsn(colors = pal_c)
 ```
 
 ## Subduing pure hues
@@ -181,8 +252,11 @@ cont_color_plot
 #| eval: true
 #| echo: true
 #| warning: false
+
+# Change saturation of plot
 ggplot(na.omit(penguins), aes(x = species, fill = sex)) +
-  geom_bar()
+  geom_bar() +
+  scale_fill_hue(c = 50)
 ```
 
 2. Adjust **value** when selecting a HEX code from Google's color picker, <https://g.co/kgs/9SQkdgv>, or adjust **lightness** directly in your ggplot:
@@ -192,7 +266,8 @@ ggplot(na.omit(penguins), aes(x = species, fill = sex)) +
 #| echo: true
 #| warning: false
 ggplot(na.omit(penguins), aes(x = bill_length_mm, y = bill_depth_mm, color = sex)) +
-  geom_point()
+  geom_point() +
+  scale_color_hue(l = 55)
 ```
 
 3. Increase transparency using the `alpha` argument in ggplot
@@ -202,7 +277,7 @@ ggplot(na.omit(penguins), aes(x = bill_length_mm, y = bill_depth_mm, color = sex
 #| echo: true
 #| warning: false
 ggplot(penguins, aes(x = species)) +
-  geom_bar(fill = "#00FF33", color = "gray7") + 
+  geom_bar(fill = "#00FF33", color = "gray7", alpha = 0.5) + 
   theme_classic() 
 ```
 
@@ -214,9 +289,12 @@ ggplot(penguins, aes(x = species)) +
 #| eval: true
 #| echo: true
 #| warning: false
+# create palette ----
+
+my_pal <- c("#32DE8A", "#E36414", "#0F4C5C")
 # plot with custom palette ----
 cat_color_plot +
-  scale_color_manual(values = c("#32DE8A", "#E36414", "#0F4C5C")) 
+  scale_color_manual(values = my_pal) 
 ```
 
 ### Set color names
@@ -226,7 +304,7 @@ cat_color_plot +
 #| echo: true
 #| warning: false
 # create palette ----
-my_palette_named <- c("#32DE8A", "#E36414", "#0F4C5C")
+my_palette_named <- c("Adelie" = "#32DE8A", "Chinstrap" =  "#E36414",  "Gentoo" = "#0F4C5C")
 
 # apply to plot (all penguins) ----
 ggplot(penguins, aes(x = bill_length_mm, y = bill_depth_mm, color = species)) +
@@ -243,16 +321,48 @@ penguins |>
 
 ### Use `scale_*_identity()`
 
+- Ex 1: color points based on value
+
 ```{r}
 #| eval: true
 #| echo: true
 #| warning: false
-# example 1 (color points based on value) ----
-ggplot(penguins, aes(x = bill_length_mm, y = bill_depth_mm)) +
-  geom_point(size = 4, alpha = 0.8) 
 
-# example 2 (highlight points based on criteria)
-ggplot(penguins, aes(x = bill_length_mm, y = bill_depth_mm)) +
-  geom_point(size = 4, alpha = 0.8)
+
+# example 1 ----
+# THIS IS A GREAT EXAMPLE OF HIGHLIGHTING DATA ----
+penguins_ex1 <- penguins |> 
+  mutate(
+    my_color = case_when(
+      bill_length_mm < 40 ~ "#D7263D",
+      between(x = bill_length_mm, left = 40, right = 50) ~ "#E4BB97",
+      bill_length_mm > 50 ~ "#386150"
+    )
+  )
+
+ggplot(penguins_ex1, aes(x = bill_length_mm, y = bill_depth_mm, color = my_color)) +
+  geom_point(size = 4, alpha = 0.8) 
+```
+
+- Ex 2: color points based on criteria
+
+```{r}
+#| eval: true
+#| echo: true
+#| warning: false
+# example 2 ----
+penguins_ex2 <- penguins |> 
+  mutate(
+    my_color = case_when(
+      body_mass_g > 6000 ~ "#D7263D",
+      TRUE ~ "gray50"
+    )
+  )
+
+ggplot(penguins_ex2, aes(x = bill_length_mm, y = bill_depth_mm, color = my_color)) +
+  geom_point(size = 4, alpha = 0.8) +
+  scale_color_identity(guide = "legend",
+                       name = "Body Mass (g)",
+                       labels = c(">6000", "<=6000"))
 ```
 
