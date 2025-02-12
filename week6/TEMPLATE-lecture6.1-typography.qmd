@@ -242,13 +242,19 @@ final_plot <- plot +
     plot.subtitle = ggtext::element_textbox(family = "sen",
                                             size = 12,
                                             color = earnings_pal["light_text"],
-                                            margin = margin(t = 2, r = 0, b = 6, l = 0)),
+                                            fill = "lightblue",
+                                            width = unit(25, "cm"),
+                                            margin = margin(t = 2, r = 0, b = 6, l = 0),
+                                            padding = margin(t = 5, r = 0, b = 5, l =0)),
     plot.caption = ggtext::element_textbox(family = "sen", 
                                            face = "italic",
                                            color = earnings_pal["light_text"],
                                            halign = 1,
                                            lineheight = 1.5,
-                                           margin = margin(t = 15, r = 0, b = 0, l = 0)),
+                                           fill = "lightblue",
+                                           width = unit(25, "cm"), 
+                                           margin = margin(t = 15, r = 0, b = 0, l = 0),
+                                           padding = margin(t = 10, r = 0, b = 10, l =0)),
     strip.text = element_text(family = "josefin",
                               face = "bold",
                               size = 10,
@@ -262,6 +268,90 @@ final_plot <- plot +
 final_plot
 ```
 
+## IANS OUTPUT
+
+```{r}
+plot <- ggplot(subset_jobs) +
+  
+  # create dumbbells ----
+  geom_segment(aes(x = total_earnings_female, xend = total_earnings_male,
+                 y = fct_reorder(occupation, total_earnings), yend = occupation)) +
+  geom_point(aes(x = total_earnings_male, y = occupation),
+             color = earnings_pal["males"], size = 3.25) + # update with colors from `earnings_pal`
+  geom_point(aes(x = total_earnings_female, y = occupation),
+             color = earnings_pal["females"], size = 3.25) + # update with colors from `earnings_pal`
+  
+  # facet wrap by group ----
+  facet_wrap(~group_label, nrow = 3, scales = "free_y") + # "free_y" plots only the axis labels that exist in each group
+  
+  # axis breaks & $ labels ----
+  scale_x_continuous(labels = scales::label_dollar(scale = 0.001, suffix = "k"),
+                     breaks = c(25000, 50000, 75000, 100000, 125000))
+```
+
+
+
+```{r}
+github_icon <- "&#xf09b"
+github_username <- "imsibaja"
+
+caption <- glue::glue(
+  "Data Source: TidyTuesday (March 5, 2019)<br>
+  <span style='font-family:fa-brands;'>{github_icon};</span>
+  {github_username}"
+)
+
+#........................create subtitle.........................
+money_icon <- "&#xf3d1"
+
+subtitle <- glue::glue("<span style='font-family:fa-regular;'>{money_icon};</span>
+                       Median earnings of full-time 
+                       <span style='color:#2D7787;'>**male**</span> versus 
+                       <span style='color:#FC6B4B;'>**female**</span>
+                       workers by occupation in 2016")
+
+#..........................updated plot..........................
+final_plot <- plot +
+  labs(title = "Males earn more than females across most occupations",
+       subtitle = subtitle,
+       caption = caption) +
+  theme_minimal(base_size = 7) +
+  theme(
+    plot.title.position = "plot",
+    plot.title = element_text(family = "josefin", 
+                              face = "bold",
+                              color = earnings_pal["dark_text"],
+                              size = rel(1.7)),
+    plot.subtitle = ggtext::element_textbox(family = "sen",
+                                            size = rel(1.7),
+                                            color = earnings_pal["light_text"],
+                                            fill = "lightblue",
+                                            width = unit(25, "cm"),
+                                            margin = margin(t = 2, r = 0, b = 6, l = 0),
+                                            padding = margin(t = 5, r = 0, b = 5, l = 0)),
+    plot.caption = ggtext::element_textbox(family = "sen", 
+                                           face = "italic",
+                                           color = earnings_pal["light_text"],
+                                            fill = "lightblue",
+                                            width = unit(25, "cm"),
+                                           halign = 1,
+                                           lineheight = 1.5,
+                                           margin = margin(t = 15, r = 0, b = 0, l = 0),
+                                           padding = margin(t = 10, r = 0, b = 10, l = 0)),
+    strip.text = element_text(family = "josefin",
+                              face = "bold",
+                              size = 10,
+                              hjust = 0),
+    panel.spacing.y = unit(x = 0.5, units = "cm"),
+    axis.text = element_text(size = 9,
+                             color = earnings_pal["light_text"]),
+    axis.title = element_blank()
+  )
+
+final_plot
+```
+
+
 ## Save plot as a PNG file
 
 ```{r}
@@ -272,8 +362,8 @@ ggsave(
   filename = here::here("week6", "images", "salary_plot.png"),
   plot = final_plot,
   device = "png",
-  width = 8,
-  height = 7,
+  width = 5,
+  height = 5,
   unit = "in"
 )
 ```
@@ -282,5 +372,6 @@ ggsave(
 
 ```{r}
 # turn off {showtext} text rendering ----
-showtext_auto(FALSE)
+showtext_auto()
+showtext_opts(dpi = 300)
 ```
